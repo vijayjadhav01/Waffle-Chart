@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>India Literacy Waffle Map</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 2rem;
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(9, auto);
+      column-gap: 8px;
+      row-gap: 4px;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .waffle {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      width: max-content;
+      margin-bottom: 3px;
+    }
+    .square {
+      width: 14px;
+      height: 14px;
+      background: #e0e0e0;
+      transition: all 0.3s;
+      position: relative;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .square.filled {
+      background: #3949AB;
+    }
+    .square.filled:hover {
+      background: #283593;
+    }
+    .square.missing-data {
+      background: #bdbdbd;
+      position: relative;
+    }
+    .square.missing-data::after {
+      content: "?";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 8px;
+      color: #757575;
+    }
+    .tooltip {
+      visibility: hidden;
+      background-color: #333;
+      color: #fff;
+      font-size: 11px;
+      text-align: center;
+      padding: 4px 8px;
+      border-radius: 4px;
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .square:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+    .label {
+      font-size: 10px;
+      text-align: center;
+      line-height: 1.2;
+      max-width: 70px;
+    }
+    .label strong {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+    .source {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #757575;
+    }
+    .notes {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: #757575;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .credits {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #555;
+      font-weight: 500;
+    }
+    @media (max-width: 768px) {
+      .grid {
+        column-gap: 6px;
+        row-gap: 3px;
+      }
+      .square {
+        width: 12px;
+        height: 12px;
+      }
+      .label {
+        font-size: 9px;
+      }
+      .label strong {
+        font-size: 9.5px;
+      }
+    }
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+      .grid {
+        column-gap: 4px;
+        row-gap: 2px;
+      }
+      .square {
+        width: 10px;
+        height: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><b>India Literacy Rate by State (2011)</b></h1>
+    
+    <div class="grid" id="waffleGrid"></div>
+    
+    <div class="source">Source: Census of India 2011</div>
+    <div class="notes">Note: Telangana was formed in 2014 and Ladakh became a Union Territory in 2019, after the 2011 Census. Their data is shown as part of their parent states at the time.</div>
+    <div class="credits">Made by Vijay Jadhav</div>
+  </div>
+
+  <script>
+    const literacyData = [
+      { state: "Jammu and Kashmir", row: 1, col: 3, literacy: 67.16 },
+      { state: "Ladakh", row: 1, col: 4, literacy: null, note: "Formed in 2019" },
+      { state: "Punjab", row: 2, col: 3, literacy: 75.84 },
+      { state: "Himachal Pradesh", row: 2, col: 4, literacy: 82.8 },
+      { state: "Uttarakhand", row: 2, col: 5, literacy: 78.82 },
+      { state: "Sikkim", row: 2, col: 7, literacy: 81.42 },
+      { state: "Arunachal Pradesh", row: 2, col: 9, literacy: 65.38 },
+      { state: "Chandigarh", row: 3, col: 2, literacy: 86.05 },
+      { state: "Haryana", row: 3, col: 3, literacy: 75.55 },
+      { state: "Delhi", row: 3, col: 4, literacy: 86.21 },
+      { state: "Uttar Pradesh", row: 3, col: 5, literacy: 67.68 },
+      { state: "Bihar", row: 3, col: 6, literacy: 61.8 },
+      { state: "West Bengal", row: 3, col: 7, literacy: 76.26 },
+      { state: "Assam", row: 3, col: 8, literacy: 72.19 },
+      { state: "Nagaland", row: 3, col: 9, literacy: 79.55 },
+      { state: "Gujarat", row: 4, col: 1, literacy: 78.03 },
+      { state: "Rajasthan", row: 4, col: 2, literacy: 66.11 },
+      { state: "Madhya Pradesh", row: 4, col: 3, literacy: 69.32 },
+      { state: "Chhattisgarh", row: 4, col: 4, literacy: 70.28 },
+      { state: "Jharkhand", row: 4, col: 5, literacy: 66.41 },
+      { state: "Odisha", row: 4, col: 6, literacy: 72.87 },
+      { state: "Meghalaya", row: 4, col: 8, literacy: 74.43 },
+      { state: "Manipur", row: 4, col: 9, literacy: 76.94 },
+      { state: "Dadra & Nagar Haveli and Daman & Diu", row: 5, col: 2, literacy: 76.24, shortName: "DNH & DD" },
+      { state: "Maharashtra", row: 5, col: 3, literacy: 82.34 },
+      { state: "Telangana", row: 5, col: 4, literacy: null, note: "Formed in 2014" },
+      { state: "Tripura", row: 5, col: 8, literacy: 87.22 },
+      { state: "Mizoram", row: 5, col: 9, literacy: 91.33 },
+      { state: "Goa", row: 6, col: 3, literacy: 88.7 },
+      { state: "Andhra Pradesh", row: 6, col: 4, literacy: 67.02 },
+      { state: "Karnataka", row: 7, col: 3, literacy: 75.36 },
+      { state: "Puducherry", row: 7, col: 4, literacy: 85.85 },
+      { state: "Lakshadweep", row: 8, col: 1, literacy: 91.85 },
+      { state: "Kerala", row: 8, col: 3, literacy: 94 },
+      { state: "Tamil Nadu", row: 8, col: 4, literacy: 80.33 },
+      { state: "Andaman and Nicobar Islands", row: 8, col: 9, literacy: 86.63 }
+    ];
+
+    const waffleGrid = document.getElementById("waffleGrid");
+    
+    // Function to get color based on literacy value category
+    const getLiteracyCategory = (value) => {
+      if (value === null) return "missing-data";
+      if (value >= 90) return "very-high";
+      if (value >= 80) return "high";
+      if (value >= 70) return "medium";
+      if (value >= 60) return "low";
+      return "very-low";
+    };
+
+    // Create empty grid first
+    for (let i = 0; i < 9*8; i++) {
+      const empty = document.createElement("div");
+      empty.className = "tile";
+      waffleGrid.appendChild(empty);
+    }
+
+    // Add states in their correct positions
+    literacyData.forEach(tileData => {
+      const gridPosition = (tileData.row - 1) * 9 + tileData.col - 1;
+      
+      // Remove the empty div if it exists
+      if (waffleGrid.children[gridPosition]) {
+        waffleGrid.removeChild(waffleGrid.children[gridPosition]);
+      }
+
+      const tile = document.createElement("div");
+      tile.className = "tile";
+
+      const waffle = document.createElement("div");
+      waffle.className = "waffle";
+
+      const totalSquares = 16;
+      const filledSquares = tileData.literacy === null ? 0 : Math.round((tileData.literacy / 100) * totalSquares);
+      
+      const category = getLiteracyCategory(tileData.literacy);
+
+      for (let i = 0; i < totalSquares; i++) {
+        const square = document.createElement("div");
+        square.className = "square";
+        
+        if (tileData.literacy === null) {
+          square.classList.add("missing-data");
+        } else if (i < filledSquares) {
+          square.classList.add("filled");
+        }
+
+        const tooltip = document.createElement("span");
+        tooltip.className = "tooltip";
+        
+        if (tileData.literacy === null) {
+          tooltip.textContent = `${tileData.state}: No data (${tileData.note})`;
+        } else {
+          tooltip.textContent = `${tileData.state}: ${tileData.literacy.toFixed(1)}% literacy`;
+        }
+
+        square.appendChild(tooltip);
+        waffle.appendChild(square);
+      }
+
+      const label = document.createElement("div");
+      label.className = "label";
+      
+      // Use shortName if provided for display purposes
+      const displayName = tileData.shortName || tileData.state;
+      
+      if (tileData.literacy === null) {
+        label.innerHTML = `<strong>${displayName}</strong>No data`;
+      } else {
+        label.innerHTML = `<strong>${displayName}</strong>${tileData.literacy.toFixed(1)}%`;
+      }
+
+      tile.appendChild(waffle);
+      tile.appendChild(label);
+      
+      // Insert at specific position
+      waffleGrid.insertBefore(tile, waffleGrid.children[gridPosition]);
+    });
+  </script>
+</body>
+</html>
