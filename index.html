@@ -209,7 +209,7 @@
 
     const waffleGrid = document.getElementById("waffleGrid");
     
-    // Function to get color based on literacy value category
+    
     const getLiteracyCategory = (value) => {
       if (value === null) return "missing-data";
       if (value >= 90) return "very-high";
@@ -219,18 +219,18 @@
       return "very-low";
     };
 
-    // Create empty grid first
+    
     for (let i = 0; i < 9*8; i++) {
       const empty = document.createElement("div");
       empty.className = "tile";
       waffleGrid.appendChild(empty);
     }
 
-    // Add states in their correct positions
+   
     literacyData.forEach(tileData => {
       const gridPosition = (tileData.row - 1) * 9 + tileData.col - 1;
       
-      // Remove the empty div if it exists
+      
       if (waffleGrid.children[gridPosition]) {
         waffleGrid.removeChild(waffleGrid.children[gridPosition]);
       }
@@ -272,7 +272,7 @@
       const label = document.createElement("div");
       label.className = "label";
       
-      // Use shortName if provided for display purposes
+     
       const displayName = tileData.shortName || tileData.state;
       
       if (tileData.literacy === null) {
@@ -284,7 +284,7 @@
       tile.appendChild(waffle);
       tile.appendChild(label);
       
-      // Insert at specific position
+      
       waffleGrid.insertBefore(tile, waffleGrid.children[gridPosition]);
     });
   </script>
